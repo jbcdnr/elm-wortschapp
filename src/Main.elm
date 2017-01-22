@@ -20,6 +20,7 @@ main =
 
 type Msg
     = OnNext
+    | OnPrevious
     | PickNewCard Card
     | ToggleHelp
     | NewDeck (Result Http.Error String)
@@ -39,6 +40,7 @@ type alias Model =
     { deck : Deck
     , currentCard : Card
     , showSolution : Bool
+    , previous : Deck
     }
 
 
@@ -47,6 +49,7 @@ defaultModel =
         []
         (Card "" "")
         False
+        []
 
 
 cardView : Card -> Bool -> String
@@ -67,6 +70,8 @@ view model =
             ]
         , div [ class "row" ]
             [ div [ class "two columns" ]
+                [ button [ onClick OnPrevious ] [ text "Previous" ] ]
+            , div [ class "two columns" ]
                 [ button [ onClick ToggleHelp ]
                     [ text
                         (if model.showSolution then
@@ -125,8 +130,20 @@ update msg model =
         OnNext ->
             ( model, pickCardCmd model.deck )
 
+        OnPrevious ->
+            let
+                newModel =
+                    case List.uncons model.previous of
+                        Nothing ->
+                            model
+
+                        Just ( first, others ) ->
+                            { model | previous = others, currentCard = first }
+            in
+                ( newModel, Cmd.none )
+
         PickNewCard card ->
-            ( { model | currentCard = card, showSolution = False }, Cmd.none )
+            ( { model | currentCard = card, showSolution = False, previous = model.currentCard :: model.previous }, Cmd.none )
 
         ToggleHelp ->
             ( { model | showSolution = not model.showSolution }, Cmd.none )
@@ -136,7 +153,7 @@ update msg model =
                 deck =
                     csvToDeck newDeck
             in
-                ( { model | deck = deck }, pickCardCmd deck )
+                ( { model | deck = deck, previous = [] }, pickCardCmd deck )
 
         NewDeck (Err error) ->
             ( { model | currentCard = Card (toString error) "" }, Cmd.none )

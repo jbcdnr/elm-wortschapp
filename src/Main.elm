@@ -49,19 +49,24 @@ defaultModel =
         False
 
 
+cardView : Card -> Bool -> String
+cardView card withSolution =
+    String.append card.front <|
+        if withSolution then
+            String.append " → " card.back
+        else
+            ""
+
+
 view model =
     div [ class "container" ]
         [ div [ class "row" ]
             [ div [ class "twelve columns" ]
-                [ h2 [] [ text model.currentCard.front ]
-                , if model.showSolution then
-                    h4 [] [ text model.currentCard.back ]
-                  else
-                    text ""
+                [ h4 [] [ text <| cardView model.currentCard model.showSolution ]
                 ]
             ]
         , div [ class "row" ]
-            [ div [ class "six columns" ]
+            [ div [ class "two columns" ]
                 [ button [ onClick ToggleHelp ]
                     [ text
                         (if model.showSolution then
@@ -71,7 +76,7 @@ view model =
                         )
                     ]
                 ]
-            , div [ class "six columns" ]
+            , div [ class "two columns" ]
                 [ button [ onClick OnNext, class "button-primary" ] [ text "Next" ] ]
             ]
         ]
@@ -152,7 +157,7 @@ getDeck =
 csvToDeck : String -> Deck
 csvToDeck text =
     String.split "\n" text
-        |> List.map (String.split "\t")
+        |> List.map (String.split ",")
         |> List.map extractFirstPair
         |> flatten
         |> List.map
@@ -161,7 +166,7 @@ csvToDeck text =
                     ( a, b ) =
                         c
                 in
-                    Card a b
+                    Card (String.trim a) (String.trim b)
             )
 
 

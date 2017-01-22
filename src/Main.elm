@@ -4,22 +4,27 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
 import List.Extra as List
+import Random
 
 
 main =
-    beginnerProgram { model = defaultModel, view = view, update = update }
+    Html.program
+        { init = ( defaultModel, Cmd.none )
+        , view = view
+        , update = update
+        , subscriptions = \m -> Sub.none
+        }
 
 
 type alias Card =
     { front : String
     , back : String
-    , id : Int
     }
 
 
 type alias Model =
     { deck : List Card
-    , currentCard : Int
+    , currentCard : Card
     , showSolution : Bool
     }
 
@@ -30,32 +35,23 @@ defaultModel =
         , Card "Danke" "Merci" 2
         , Card "Bitte" "Thanks" 3
         ]
-        1
+        (Card "Bitte" "Thanks" 3)
         False
-
-
-cardWithId : Int -> List Card -> Maybe Card
-cardWithId id cards =
-    List.find (\c -> c.id == id) cards
 
 
 view model =
     div [ class "container" ]
         [ div [ class "row" ]
             [ div [ class "twelve columns" ]
-                [ h2 [] [ text (cardWithId model.currentCard model.deck |> Maybe.map .front |> Maybe.withDefault "") ]
+                [ h2 [] [ text model.currentCard.front ]
                 , if model.showSolution then
-                    h4 [] [ text (cardWithId model.currentCard model.deck |> Maybe.map .back |> Maybe.withDefault "") ]
+                    h4 [] [ text model.currentCard.back ]
                   else
                     text ""
                 ]
             ]
         , div [ class "row" ]
-            [ div [ class "four columns" ]
-                [ button [ onClick OnKnown ] [ text "I know" ] ]
-            , div [ class "four columns" ]
-                [ button [ onClick OnUnknown ] [ text "I don't know" ] ]
-            , div [ class "four columns" ]
+            [ div [ class "six columns" ]
                 [ button [ onClick ToggleHelp ]
                     [ text
                         (if model.showSolution then
@@ -65,46 +61,31 @@ view model =
                         )
                     ]
                 ]
+            , div [ class "six columns" ]
+                [ button [ onClick OnNext, class "button-primary" ] [ text "Next" ] ]
             ]
         ]
 
 
 type Msg
-    = OnKnown
-    | OnUnknown
+    = OnNext
+    | PickNewCard Card
     | ToggleHelp
 
 
-getIdAfter : Int -> List Card -> Int
-getIdAfter id cards =
-    List.zip cards (List.append (List.drop 1 cards) (List.take 1 cards))
-        |> List.find
-            (\c ->
-                let
-                    ( a, b ) =
-                        c
-                in
-                    a.id == id
-            )
-        |> Maybe.map
-            (\c ->
-                let
-                    ( a, b ) =
-                        c
-                in
-                    b.id
-            )
-        |> Maybe.withDefault id
+randomCardPicker : List Card -> Random.Generator Card
+randomCardPicker deck =
+    Random.int 0 (List.length deck - 1) |> Random.map (\i -> List.getAt i deck |> Maybe.withDefault (Card "" "" -1))
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnKnown ->
-            { model | currentCard = getIdAfter model.currentCard model.deck }
+        OnNext ->
+            ( model, Random.generate PickNewCard (randomCardPicker model.deck) )
 
-        OnUnknown ->
-            { model | currentCard = getIdAfter model.currentCard model.deck }
+        PickNewCard card ->
+            ( { model | currentCard = card, showSolution = False }, Cmd.none )
 
         ToggleHelp ->
-            { model | showSolution = not model.showSolution }
+            ( { model | showSolution = not model.showSolution }, Cmd.none )

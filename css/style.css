@@ -1,0 +1,69 @@
+
+input {
+  margin-top: .3em;
+  box-sizing: border-box;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom-width: 1.5px;
+}
+
+input:focus {
+  outline: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid #1EAEDB;
+}
+
+#show-doodle tr:last-child td {
+  border-bottom: none;
+}
+
+#show-doodle table #choice td:last-child {
+  border-bottom: none;
+}
+
+#show-doodle table tr:last-child {
+    font-weight: bold;
+}
+
+#list-doodles table tr:first-child {
+  border-top: 1px solid #E1E1E1;
+}
+
+#list-doodles td {
+  font-size: 1.3em;
+  width: 300px;
+}
+
+#edit-doodle .edit-option .delete-cross {
+  display: inline-block;
+  position: relative;
+  top: .3em;
+  margin-left: .5em;
+}
+
+#edit-doodle .title {
+  font-size: 2em;
+}
+
+#header svg {
+  float: left;
+  margin-right: .8em;
+  position: relative;
+}
+
+#show-doodle #header svg {
+  top: .8em;
+}
+
+#edit-doodle #header svg {
+  top: 1em;
+}
+
+.link {
+    color: #1EAEDB;
+    text-decoration: underline;
+    cursor: pointer;
+}

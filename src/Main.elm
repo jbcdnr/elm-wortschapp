@@ -21,9 +21,29 @@ main =
 type Msg
     = OnNext
     | OnPrevious
-    | PickNewCard Card
     | ToggleHelp
+    | PickNewCard Card
+    | ChangeSelector Selector
     | NewDeck (Result Http.Error String)
+
+
+type Selector
+    = AllWays
+    | DeutschToFrancais
+    | FrancaisToDeutsch
+
+
+selectorString : Selector -> String
+selectorString sel =
+    case sel of
+        AllWays ->
+            "Both"
+
+        DeutschToFrancais ->
+            "DE → FR"
+
+        FrancaisToDeutsch ->
+            "FR → DE"
 
 
 type alias Deck =
@@ -41,6 +61,7 @@ type alias Model =
     , currentCard : Card
     , showSolution : Bool
     , previous : Deck
+    , waySelector : Selector
     }
 
 
@@ -50,6 +71,7 @@ defaultModel =
         (Card "" "")
         False
         []
+        AllWays
 
 
 cardView : Card -> Bool -> String
@@ -64,25 +86,37 @@ cardView card withSolution =
 view model =
     div [ class "container" ]
         [ div [ class "row" ]
+            ([ AllWays, DeutschToFrancais, FrancaisToDeutsch ]
+                |> List.map
+                    (\s ->
+                        button
+                            [ onClick (ChangeSelector s)
+                            , class
+                                (if s == model.waySelector then
+                                    "button-primary selector"
+                                 else
+                                    "selector"
+                                )
+                            ]
+                            [ text (selectorString s) ]
+                    )
+            )
+        , div [ class "row" ]
             [ div [ class "twelve columns" ]
                 [ h4 [] [ text <| cardView model.currentCard model.showSolution ]
                 ]
             ]
         , div [ class "row" ]
-            [ div [ class "two columns" ]
-                [ button [ onClick OnPrevious ] [ text "Previous" ] ]
-            , div [ class "two columns" ]
-                [ button [ onClick ToggleHelp ]
-                    [ text
-                        (if model.showSolution then
-                            "Hide"
-                         else
-                            "Show"
-                        )
-                    ]
+            [ button [ onClick OnPrevious, class "button" ] [ text "Previous" ]
+            , button [ onClick ToggleHelp, class "button" ]
+                [ text
+                    (if model.showSolution then
+                        "Hide"
+                     else
+                        "Show"
+                    )
                 ]
-            , div [ class "two columns" ]
-                [ button [ onClick OnNext, class "button-primary" ] [ text "Next" ] ]
+            , button [ onClick OnNext, class "button button-primary" ] [ text "Next" ]
             ]
         ]
 
@@ -92,8 +126,8 @@ flip card =
     Card card.back card.front
 
 
-randomCardPicker : Deck -> Random.Generator Card
-randomCardPicker deck =
+randomCardPicker : Deck -> Selector -> Random.Generator Card
+randomCardPicker deck sideSelector =
     let
         cardGenerator =
             Random.int 0 (List.length deck - 1)
@@ -111,24 +145,35 @@ randomCardPicker deck =
                     let
                         ( card, f ) =
                             c
+
+                        shouldFlip =
+                            case sideSelector of
+                                AllWays ->
+                                    f
+
+                                DeutschToFrancais ->
+                                    False
+
+                                FrancaisToDeutsch ->
+                                    True
                     in
-                        if f then
+                        if shouldFlip then
                             flip card
                         else
                             card
                 )
 
 
-pickCardCmd : Deck -> Cmd Msg
-pickCardCmd deck =
-    Random.generate PickNewCard (randomCardPicker deck)
+pickCardCmd : Model -> Cmd Msg
+pickCardCmd model =
+    Random.generate PickNewCard (randomCardPicker model.deck model.waySelector)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         OnNext ->
-            ( model, pickCardCmd model.deck )
+            ( model, pickCardCmd model )
 
         OnPrevious ->
             let
@@ -142,6 +187,19 @@ update msg model =
             in
                 ( newModel, Cmd.none )
 
+        ChangeSelector selector ->
+            let
+                newModel =
+                    { model | waySelector = selector }
+
+                cmd =
+                    if selector /= model.waySelector then
+                        pickCardCmd newModel
+                    else
+                        Cmd.none
+            in
+                ( newModel, cmd )
+
         PickNewCard card ->
             ( { model | currentCard = card, showSolution = False, previous = model.currentCard :: model.previous }, Cmd.none )
 
@@ -152,8 +210,11 @@ update msg model =
             let
                 deck =
                     csvToDeck newDeck
+
+                newModel =
+                    { model | deck = deck, previous = [] }
             in
-                ( { model | deck = deck, previous = [] }, pickCardCmd deck )
+                ( newModel, pickCardCmd newModel )
 
         NewDeck (Err error) ->
             ( { model | currentCard = Card (toString error) "" }, Cmd.none )

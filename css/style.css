@@ -1,0 +1,18 @@
+.button, .selector {
+  margin-left: .5em;
+  margin-right: .5em;
+}
+
+.selector {
+  padding-left: 1.3em;
+  padding-right: 1.3em;
+}
+
+body {
+  margin-top: 2em;
+}
+
+h4 {
+  margin-top: .5em ;
+  margin-bottom: .9em ;
+}

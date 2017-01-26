@@ -33,7 +33,7 @@ randomCardPicker deck sideSelector =
 
                         shouldFlip =
                             case sideSelector of
-                                AllWays ->
+                                Both ->
                                     f
 
                                 DeutschToFrancais ->
@@ -88,7 +88,7 @@ update msg model =
         PickNewCard card ->
             ( { model | currentCard = card, showSolution = False, previous = model.currentCard :: model.previous }, Cmd.none )
 
-        ToggleHelp ->
+        ToggleSolution ->
             ( { model | showSolution = not model.showSolution }, Cmd.none )
 
         NewDeck (Ok newDeck) ->
@@ -103,18 +103,6 @@ update msg model =
 
         NewDeck (Err error) ->
             ( { model | currentCard = Card (toString error) "" }, Cmd.none )
-
-
-getDeck : Cmd Msg
-getDeck =
-    let
-        url =
-            "https://dl.dropboxusercontent.com/s/6h82np562bctp36/voc.csv?dl=0"
-
-        request =
-            Http.getString url
-    in
-        Http.send NewDeck request
 
 
 csvToDeck : String -> Deck

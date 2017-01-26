@@ -8,30 +8,11 @@ import Model exposing (..)
 
 view model =
     div [ class "container" ]
-        [ div [ class "row" ]
-            ([ AllWays, DeutschToFrancais, FrancaisToDeutsch ]
-                |> List.map
-                    (\s ->
-                        button
-                            [ onClick (ChangeSelector s)
-                            , class
-                                (if s == model.waySelector then
-                                    "button-primary selector"
-                                 else
-                                    "selector"
-                                )
-                            ]
-                            [ text (selectorString s) ]
-                    )
-            )
-        , div [ class "row" ]
-            [ div [ class "twelve columns" ]
-                [ h4 [] [ text <| cardView model.currentCard model.showSolution ]
-                ]
-            ]
+        [ selectorsView model [ AllWays, DeutschToFrancais, FrancaisToDeutsch ]
+        , cardView model
         , div [ class "row" ]
             [ button [ onClick OnPrevious, class "button" ] [ text "Previous" ]
-            , button [ onClick ToggleHelp, class "button" ]
+            , button [ onClick ToggleSolution, class "button" ]
                 [ text
                     (if model.showSolution then
                         "Hide"
@@ -42,6 +23,46 @@ view model =
             , button [ onClick OnNext, class "button button-primary" ] [ text "Next" ]
             ]
         ]
+
+
+cardView model =
+    case model.currentCard of
+        Nothing ->
+            text "No card to display"
+
+        Just card ->
+            let
+                cardText =
+                    String.append card.front <|
+                        if model.showSolution then
+                            String.append " → " card.back
+                        else
+                            ""
+            in
+                div [ class "row" ]
+                    [ div [ class "twelve columns" ]
+                        [ h4 [] [ text cardText ]
+                        ]
+                    ]
+
+
+selectorsView model selectors =
+    div [ class "row" ]
+        (selectors
+            |> List.map
+                (\s ->
+                    button
+                        [ onClick (ChangeSelector s)
+                        , class
+                            (if s == model.waySelector then
+                                "button-primary selector"
+                             else
+                                "selector"
+                            )
+                        ]
+                        [ text (selectorString s) ]
+                )
+        )
 
 
 selectorString : Selector -> String
@@ -55,12 +76,3 @@ selectorString sel =
 
         FrancaisToDeutsch ->
             "FR → DE"
-
-
-cardView : Card -> Bool -> String
-cardView card withSolution =
-    String.append card.front <|
-        if withSolution then
-            String.append " → " card.back
-        else
-            ""

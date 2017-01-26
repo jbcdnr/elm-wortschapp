@@ -6,7 +6,7 @@ import Http
 type Msg
     = OnNext
     | OnPrevious
-    | ToggleHelp
+    | ToggleSolution
     | PickNewCard Card
     | ChangeSelector Selector
     | NewDeck (Result Http.Error String)
@@ -23,15 +23,15 @@ type alias Card =
 
 
 type alias Model =
-    { deck : Deck
-    , currentCard : Card
+    { allCards : Deck
+    , currentCard : Maybe Card
+    , previousCards : Deck
     , showSolution : Bool
-    , previous : Deck
     , waySelector : Selector
     }
 
 
 type Selector
-    = AllWays
+    = Both
     | DeutschToFrancais
     | FrancaisToDeutsch

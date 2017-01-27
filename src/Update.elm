@@ -1,151 +1,112 @@
 module Update exposing (..)
 
 import List.Extra as List
-import Random
+import MyList as List
 import Model exposing (..)
-import Http
-
-
-flip : Card -> Card
-flip card =
-    Card card.back card.front
-
-
-randomCardPicker : Deck -> Selector -> Random.Generator Card
-randomCardPicker deck sideSelector =
-    let
-        cardGenerator =
-            Random.int 0 (List.length deck - 1)
-                |> Random.map (\i -> List.getAt i deck |> Maybe.withDefault (Card "" ""))
-
-        flipGenerator =
-            Random.bool
-
-        together =
-            Random.pair cardGenerator flipGenerator
-    in
-        together
-            |> Random.map
-                (\c ->
-                    let
-                        ( card, f ) =
-                            c
-
-                        shouldFlip =
-                            case sideSelector of
-                                Both ->
-                                    f
-
-                                DeutschToFrancais ->
-                                    False
-
-                                FrancaisToDeutsch ->
-                                    True
-                    in
-                        if shouldFlip then
-                            flip card
-                        else
-                            card
-                )
-
-
-pickCardCmd : Model -> Cmd Msg
-pickCardCmd model =
-    Random.generate PickNewCard (randomCardPicker model.deck model.waySelector)
+import DeckShuffle exposing (..)
+import Cmd exposing (..)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg ({ allCards, previousCards, nextCards, showSolution, waySelector } as model) =
     case msg of
-        OnNext ->
-            ( model, pickCardCmd model )
-
-        OnPrevious ->
-            let
-                newModel =
-                    case List.uncons model.previous of
-                        Nothing ->
-                            model
-
-                        Just ( first, others ) ->
-                            { model | previous = others, currentCard = first }
-            in
-                ( newModel, Cmd.none )
-
-        ChangeSelector selector ->
-            let
-                newModel =
-                    { model | waySelector = selector }
-
-                cmd =
-                    if selector /= model.waySelector then
-                        pickCardCmd newModel
-                    else
-                        Cmd.none
-            in
-                ( newModel, cmd )
-
-        PickNewCard card ->
-            ( { model | currentCard = card, showSolution = False, previous = model.currentCard :: model.previous }, Cmd.none )
-
-        ToggleSolution ->
-            ( { model | showSolution = not model.showSolution }, Cmd.none )
-
         NewDeck (Ok newDeck) ->
             let
                 deck =
                     csvToDeck newDeck
 
                 newModel =
-                    { model | deck = deck, previous = [] }
+                    { model | allCards = deck }
             in
-                ( newModel, pickCardCmd newModel )
+                ( newModel, shuffleDeckCmd newModel )
 
         NewDeck (Err error) ->
-            ( { model | currentCard = Card (toString error) "" }, Cmd.none )
+            ( model, Cmd.none )
 
+        DeckShuffled deck ->
+            case List.uncons deck of
+                Just ( first, others ) ->
+                    let
+                        newPreviousCards =
+                            case model.currentCard of
+                                Just c ->
+                                    c :: previousCards
 
-csvToDeck : String -> Deck
-csvToDeck text =
-    String.split "\n" text
-        |> List.map (String.split ",")
-        |> List.map extractFirstPair
-        |> flatten
-        |> List.map
-            (\c ->
-                let
-                    ( a, b ) =
-                        c
-                in
-                    Card (String.trim a) (String.trim b)
-            )
+                                Nothing ->
+                                    previousCards
+                    in
+                        ( { model
+                            | currentCard = Just first
+                            , previousCards = newPreviousCards
+                            , nextCards = others
+                            , showSolution = False
+                          }
+                        , Cmd.none
+                        )
 
-
-extractFirstPair : List a -> Maybe ( a, a )
-extractFirstPair ls =
-    case List.uncons ls of
-        Nothing ->
-            Nothing
-
-        Just ( first, rest ) ->
-            case List.uncons rest of
                 Nothing ->
-                    Nothing
+                    ( model, Cmd.none )
 
-                Just ( second, rest ) ->
-                    Just ( first, second )
+        otherMsg ->
+            case model.currentCard of
+                Nothing ->
+                    ( model, Cmd.none )
 
+                Just currentCard ->
+                    case otherMsg of
+                        OnNext ->
+                            case List.uncons nextCards of
+                                Just ( head, tail ) ->
+                                    let
+                                        newModel =
+                                            { model
+                                                | currentCard = Just head
+                                                , nextCards = tail
+                                                , previousCards = currentCard :: previousCards
+                                                , showSolution = False
+                                            }
+                                    in
+                                        ( newModel, Cmd.none )
 
-flatten : List (Maybe a) -> List a
-flatten ls =
-    let
-        reducer =
-            \elem acc ->
-                case elem of
-                    Nothing ->
-                        acc
+                                Nothing ->
+                                    ( model, shuffleDeckCmd model )
 
-                    Just x ->
-                        x :: acc
-    in
-        List.foldl reducer [] ls |> List.reverse
+                        OnPrevious ->
+                            let
+                                newModel =
+                                    case List.uncons previousCards of
+                                        Nothing ->
+                                            model
+
+                                        Just ( first, others ) ->
+                                            { model
+                                                | previousCards = others
+                                                , currentCard = Just first
+                                                , nextCards = currentCard :: nextCards
+                                                , showSolution = False
+                                            }
+                            in
+                                ( newModel, Cmd.none )
+
+                        ChangeSelector selector ->
+                            if selector == waySelector then
+                                ( model, Cmd.none )
+                            else
+                                let
+                                    newModel =
+                                        { model
+                                            | waySelector = selector
+                                            , previousCards = []
+                                            , currentCard = Nothing
+                                        }
+                                in
+                                    ( newModel
+                                    , shuffleDeckCmd newModel
+                                    )
+
+                        ToggleSolution ->
+                            ( { model | showSolution = not showSolution }, Cmd.none )
+
+                        -- Not very nice
+                        others ->
+                            ( model, Cmd.none )

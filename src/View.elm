@@ -8,7 +8,7 @@ import Model exposing (..)
 
 view model =
     div [ class "container" ]
-        [ selectorsView model [ AllWays, DeutschToFrancais, FrancaisToDeutsch ]
+        [ selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
         , cardView model
         , div [ class "row" ]
             [ button [ onClick OnPrevious, class "button" ] [ text "Previous" ]
@@ -68,7 +68,7 @@ selectorsView model selectors =
 selectorString : Selector -> String
 selectorString sel =
     case sel of
-        AllWays ->
+        Both ->
             "Both"
 
         DeutschToFrancais ->

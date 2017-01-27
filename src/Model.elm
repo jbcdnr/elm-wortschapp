@@ -7,7 +7,7 @@ type Msg
     = OnNext
     | OnPrevious
     | ToggleSolution
-    | PickNewCard Card
+    | DeckShuffled Deck
     | ChangeSelector Selector
     | NewDeck (Result Http.Error String)
 
@@ -26,8 +26,19 @@ type alias Model =
     { allCards : Deck
     , currentCard : Maybe Card
     , previousCards : Deck
+    , nextCards : Deck
     , showSolution : Bool
     , waySelector : Selector
+    }
+
+
+defaultModel =
+    { allCards = []
+    , currentCard = Nothing
+    , previousCards = []
+    , nextCards = []
+    , showSolution = False
+    , waySelector = Both
     }
 
 

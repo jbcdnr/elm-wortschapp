@@ -11,8 +11,8 @@ view model =
         [ selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
         , cardView model
         , div [ class "row" ]
-            [ button [ onClick OnPrevious, class "button" ] [ text "Previous" ]
-            , button [ onClick ToggleSolution, class "button" ]
+            [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]
+            , button [ onClick ToggleSolution, class "button four columns" ]
                 [ text
                     (if model.showSolution then
                         "Hide"
@@ -20,7 +20,7 @@ view model =
                         "Show"
                     )
                 ]
-            , button [ onClick OnNext, class "button button-primary" ] [ text "Next" ]
+            , button [ onClick OnNext, class "button button-primary four columns" ] [ text "Next" ]
             ]
         ]
 
@@ -28,7 +28,11 @@ view model =
 cardView model =
     case model.currentCard of
         Nothing ->
-            text "No card to display"
+            div [ class "row" ]
+                [ div [ class "twelve columns" ]
+                    [ h4 [] [ text "No card to display" ]
+                    ]
+                ]
 
         Just card ->
             let
@@ -51,14 +55,16 @@ selectorsView model selectors =
         (selectors
             |> List.map
                 (\s ->
-                    button
+                    span
                         [ onClick (ChangeSelector s)
-                        , class
-                            (if s == model.waySelector then
-                                "button-primary selector"
-                             else
-                                "selector"
-                            )
+                        , class <|
+                            String.append
+                                (if s == model.waySelector then
+                                    "selected"
+                                 else
+                                    ""
+                                )
+                                " selector"
                         ]
                         [ text (selectorString s) ]
                 )

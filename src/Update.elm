@@ -115,7 +115,10 @@ update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, sel
 
                         Tags tags ->
                             if List.member tag tags then
-                                if List.length tags == 1 then AllTags else Tags (List.remove tag tags)
+                                if List.length tags == 1 then
+                                    AllTags
+                                else
+                                    Tags (List.remove tag tags)
                             else
                                 Tags (tag :: tags)
 

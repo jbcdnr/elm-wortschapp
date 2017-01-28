@@ -4,12 +4,16 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
 import Model exposing (..)
+import Json.Decode as Json
+import Html.Events.Extra exposing (targetValueIntParse)
 
 
 view model =
     div [ class "container" ]
-        [ h5 [] [ text "Categories" ]
-        , tagsView model
+        [ h5 [] [ text "Source" ]
+        , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
+        , h5 [] [ text "Categories" ]
+        , (tagsView model)
         , h5 [] [ text "Order" ]
         , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
         , cardView model
@@ -26,6 +30,10 @@ view model =
             , button [ onClick OnNext, class "button button-primary four columns" ] [ text "Next" ]
             ]
         ]
+
+
+onChange tagger =
+    on "change" (Json.map tagger targetValue)
 
 
 cardView model =

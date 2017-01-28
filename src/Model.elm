@@ -14,11 +14,18 @@ type Msg
     | ToggleTag Tag
     | ToggleAllTag
     | NewDeck (Result Http.Error String)
+    | ChangeSource String
     | NoOp
 
 
 type alias Tag =
     String
+
+
+type alias Source =
+    { name : String
+    , url : String
+    }
 
 
 type alias Deck =
@@ -33,7 +40,8 @@ type alias Card =
 
 
 type alias Model =
-    { allCards : Deck
+    { sources : List Source
+    , allCards : Deck
     , currentCard : Maybe Card
     , previousCards : Deck
     , nextCards : Deck
@@ -49,7 +57,11 @@ type SelectedTags
 
 
 defaultModel =
-    { allCards = []
+    { sources =
+        [ Source "Base" "https://dl.dropboxusercontent.com/s/6h82np562bctp36/voc.csv?dl=0"
+        , Source "Verbs" "https://dl.dropboxusercontent.com/s/n62w9he1obj14tu/verbs.csv?dl=0"
+        ]
+    , allCards = []
     , currentCard = Nothing
     , previousCards = []
     , nextCards = []

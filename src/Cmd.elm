@@ -8,12 +8,9 @@ import DeckShuffle exposing (..)
 import Http
 
 
-getDeck : Cmd Msg
-getDeck =
+getDeck : String -> Cmd Msg
+getDeck url =
     let
-        url =
-            "https://dl.dropboxusercontent.com/s/6h82np562bctp36/voc.csv?dl=0"
-
         request =
             Http.getString url
     in

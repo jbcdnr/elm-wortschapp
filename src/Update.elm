@@ -142,6 +142,14 @@ update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, sel
             in
                 ( newModel, shuffleDeckCmd newModel )
 
+        ChangeSource name ->
+            case List.find (\s -> s.name == name) model.sources of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just { url } ->
+                    ( { model | currentCard = Nothing, previousCards = [], nextCards = [] }, getDeck url )
+
         NoOp ->
             ( model, Cmd.none )
 

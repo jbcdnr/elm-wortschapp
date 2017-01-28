@@ -8,7 +8,10 @@ import Model exposing (..)
 
 view model =
     div [ class "container" ]
-        [ selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
+        [ h5 [] [ text "Categories" ]
+        , tagsView model
+        , h5 [] [ text "Order" ]
+        , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
         , cardView model
         , div [ class "row" ]
             [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]
@@ -50,25 +53,52 @@ cardView model =
                     ]
 
 
+tagsView model =
+    let
+        isSelected tag =
+            case model.selectedTags of
+                AllTags ->
+                    False
+
+                Tags tags ->
+                    tags |> List.member tag
+
+        selectedAllButton =
+            case model.selectedTags of
+                AllTags ->
+                    True
+
+                Tags ls ->
+                    False
+
+        allButton =
+            tagView "All" selectedAllButton ToggleAllTag "#2ecc71"
+    in
+        div [ class "row" ] (allButton :: (tags model |> List.map (\tag -> tagView tag (isSelected tag) (ToggleTag tag) "#2ecc71")))
+
+
 selectorsView model selectors =
     div [ class "row" ]
         (selectors
             |> List.map
-                (\s ->
-                    span
-                        [ onClick (ChangeSelector s)
-                        , class <|
-                            String.append
-                                (if s == model.waySelector then
-                                    "selected"
-                                 else
-                                    ""
-                                )
-                                " selector"
-                        ]
-                        [ text (selectorString s) ]
-                )
+                (\s -> tagView (selectorString s) (s == model.waySelector) (ChangeSelector s) "#bdc3c7")
         )
+
+
+tagView label selected onClickCmd selectedColor =
+    let
+        tagStyle =
+            if selected then
+                [ ( "color", "white" ), ( "background-color", selectedColor ), ( "border-color", selectedColor ) ]
+            else
+                []
+    in
+        span
+            [ onClick onClickCmd
+            , class "tag"
+            , style tagStyle
+            ]
+            [ text label ]
 
 
 selectorString : Selector -> String

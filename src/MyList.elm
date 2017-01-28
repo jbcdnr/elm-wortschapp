@@ -19,6 +19,13 @@ flatten ls =
         List.foldl reducer [] ls |> List.reverse
 
 
+flatMap : (a -> List b) -> List a -> List b
+flatMap f ls =
+    ls
+        |> List.map f
+        |> List.foldr List.append []
+
+
 shuffle : List a -> Random.Generator (List a)
 shuffle list =
     let

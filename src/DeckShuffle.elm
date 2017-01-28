@@ -7,13 +7,21 @@ import Model exposing (..)
 
 
 shuffleDeckCmd : Model -> Cmd Msg
-shuffleDeckCmd ({ allCards, waySelector } as model) =
-    Random.generate DeckShuffled (deckShuffler allCards waySelector)
+shuffleDeckCmd model =
+    Random.generate DeckShuffled (deckShuffler model)
 
 
-deckShuffler : Deck -> Selector -> Random.Generator Deck
-deckShuffler deck sideSelector =
+deckShuffler : Model -> Random.Generator Deck
+deckShuffler ({ allCards, waySelector, selectedTags } as model) =
     let
+        deck =
+            case selectedTags of
+                AllTags ->
+                    allCards
+
+                Tags tags ->
+                    allCards |> List.filter (\c -> c.tags |> List.any (\tag -> tags |> List.member tag))
+
         deckGenerator =
             List.shuffle deck
 
@@ -37,7 +45,7 @@ deckShuffler deck sideSelector =
                     ls
                         |> List.map
                             (\( c, f ) ->
-                                case sideSelector of
+                                case waySelector of
                                     Both ->
                                         if f then
                                             flip c
@@ -55,4 +63,4 @@ deckShuffler deck sideSelector =
 
 flip : Card -> Card
 flip card =
-    Card card.back card.front
+    Card card.back card.front card.tags

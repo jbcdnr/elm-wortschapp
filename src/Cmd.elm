@@ -24,20 +24,16 @@ csvToDeck : String -> Deck
 csvToDeck text =
     String.split "\n" text
         |> List.map (String.split ",")
-        |> List.map extractFirstPair
+        |> List.map uncons2
         |> List.flatten
         |> List.map
-            (\c ->
-                let
-                    ( a, b ) =
-                        c
-                in
-                    Card (String.trim a) (String.trim b)
+            (\( front, back, tags ) ->
+                Card (String.trim front) (String.trim back) (tags |> List.map String.trim |> List.filter (\x -> not <| String.isEmpty x))
             )
 
 
-extractFirstPair : List a -> Maybe ( a, a )
-extractFirstPair ls =
+uncons2 : List a -> Maybe ( a, a, List a )
+uncons2 ls =
     case List.uncons ls of
         Nothing ->
             Nothing
@@ -48,4 +44,4 @@ extractFirstPair ls =
                     Nothing
 
                 Just ( second, rest ) ->
-                    Just ( first, second )
+                    Just ( first, second, rest )

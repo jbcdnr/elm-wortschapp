@@ -1,6 +1,8 @@
 module Model exposing (..)
 
 import Http
+import List.Extra as List
+import MyList as List
 
 
 type Msg
@@ -9,7 +11,14 @@ type Msg
     | ToggleSolution
     | DeckShuffled Deck
     | ChangeSelector Selector
+    | ToggleTag Tag
+    | ToggleAllTag
     | NewDeck (Result Http.Error String)
+    | NoOp
+
+
+type alias Tag =
+    String
 
 
 type alias Deck =
@@ -19,6 +28,7 @@ type alias Deck =
 type alias Card =
     { front : String
     , back : String
+    , tags : List Tag
     }
 
 
@@ -29,7 +39,13 @@ type alias Model =
     , nextCards : Deck
     , showSolution : Bool
     , waySelector : Selector
+    , selectedTags : SelectedTags
     }
+
+
+type SelectedTags
+    = AllTags
+    | Tags (List Tag)
 
 
 defaultModel =
@@ -39,7 +55,16 @@ defaultModel =
     , nextCards = []
     , showSolution = False
     , waySelector = Both
+    , selectedTags = AllTags
     }
+
+
+tags : Model -> List Tag
+tags model =
+    model.allCards
+        |> List.flatMap .tags
+        |> List.unique
+        |> List.sort
 
 
 type Selector

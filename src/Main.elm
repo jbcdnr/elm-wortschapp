@@ -10,7 +10,7 @@ import Cmd exposing (..)
 
 main =
     Html.program
-        { init = ( defaultModel, getDeck "https://dl.dropboxusercontent.com/s/6h82np562bctp36/voc.csv?dl=0" )
+        { init = ( defaultModel, getIndex "https://dl.dropboxusercontent.com/s/9vyxea7cntyc4d5/index.csv?dl=0" )
         , view = view
         , update = update
         , subscriptions = \m -> Sub.none

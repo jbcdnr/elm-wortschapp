@@ -14,6 +14,7 @@ type Msg
     | ToggleTag Tag
     | ToggleAllTag
     | NewDeck (Result Http.Error String)
+    | NewIndex (Result Http.Error String)
     | ChangeSource String
     | NoOp
 
@@ -57,10 +58,7 @@ type SelectedTags
 
 
 defaultModel =
-    { sources =
-        [ Source "Base" "https://dl.dropboxusercontent.com/s/6h82np562bctp36/voc.csv?dl=0"
-        , Source "Verbs" "https://dl.dropboxusercontent.com/s/n62w9he1obj14tu/verbs.csv?dl=0"
-        ]
+    { sources = []
     , allCards = []
     , currentCard = Nothing
     , previousCards = []

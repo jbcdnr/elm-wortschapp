@@ -23,6 +23,26 @@ update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, sel
         NewDeck (Err error) ->
             ( model, Cmd.none )
 
+        NewIndex (Ok newIndex) ->
+            let
+                sources =
+                    csvToSources newIndex
+
+                newModel =
+                    { model | sources = sources }
+
+                cmd =
+                    case List.uncons sources of
+                        Nothing ->
+                            Cmd.none
+                        Just (head, tail) ->
+                            getDeck head.url
+            in
+                ( newModel, cmd )
+
+        NewIndex (Err error) ->
+            ( model, Cmd.none )
+
         DeckShuffled deck ->
             case List.uncons deck of
                 Just ( first, others ) ->

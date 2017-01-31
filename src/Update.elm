@@ -35,7 +35,8 @@ update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, sel
                     case List.uncons sources of
                         Nothing ->
                             Cmd.none
-                        Just (head, tail) ->
+
+                        Just ( head, tail ) ->
                             getDeck head.url
             in
                 ( newModel, cmd )

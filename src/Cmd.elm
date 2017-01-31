@@ -37,6 +37,7 @@ csvToDeck text =
                 Card (String.trim front) (String.trim back) (tags |> List.map String.trim |> List.filter (\x -> not <| String.isEmpty x))
             )
 
+
 csvToSources : String -> List Source
 csvToSources text =
     String.split "\n" text

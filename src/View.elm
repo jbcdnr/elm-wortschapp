@@ -10,26 +10,33 @@ import Html.Events.Extra exposing (targetValueIntParse)
 
 view model =
     div [ class "container" ]
-        (List.append (if List.length model.sources <= 1 then [] else [ h5 [] [ text "Source" ]
-        , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
-        ]) [ h5 [] [ text "Categories" ]
-        , (tagsView model)
-        , h5 [] [ text "Order" ]
-        , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
-        , cardView model
-        , div [ class "row" ]
-            [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]
-            , button [ onClick ToggleSolution, class "button four columns" ]
-                [ text
-                    (if model.showSolution then
-                        "Hide"
-                     else
-                        "Show"
-                    )
+        (List.append
+            (if List.length model.sources <= 1 then
+                []
+             else
+                [ h5 [] [ text "Source" ]
+                , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
                 ]
-            , button [ onClick OnNext, class "button button-primary four columns" ] [ text "Next" ]
+            )
+            [ h5 [] [ text "Categories" ]
+            , (tagsView model)
+            , h5 [] [ text "Order" ]
+            , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
+            , cardView model
+            , div [ class "row" ]
+                [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]
+                , button [ onClick ToggleSolution, class "button four columns" ]
+                    [ text
+                        (if model.showSolution then
+                            "Hide"
+                         else
+                            "Show"
+                        )
+                    ]
+                , button [ onClick OnNext, class "button button-primary four columns" ] [ text "Next" ]
+                ]
             ]
-        ])
+        )
 
 
 onChange tagger =

@@ -4,6 +4,7 @@ import Random
 import List.Extra as List
 import MyList as List
 import Model exposing (..)
+import Char
 
 
 shuffleDeckCmd : Model -> Cmd Msg
@@ -41,11 +42,24 @@ deckShuffler ({ allEntries, selectedSelector, selectedTags } as model) =
 applySelector : Selector -> List String -> Card
 applySelector selector data =
     let
-        -- TODO not correct to split on spaces
+        interpolation : String -> List String
+        interpolation str =
+            case List.elemIndex '$' (String.toList str) of
+                    Nothing ->
+                        [ str ]
+                    Just index ->
+                        let
+                            before = String.left index str
+                            dollarCount = String.dropLeft (index + 1) str
+                            value = List.takeWhile Char.isDigit (String.toList dollarCount)
+                            rest = List.dropWhile Char.isDigit (String.toList dollarCount)
+                        in
+                            before :: String.fromList ('$' :: value) :: interpolation (String.fromList rest)
+
         format : String -> List String -> String
         format str args =
             str
-                |> String.split " "
+                |> interpolation
                 |> List.map
                     (\w ->
                         if String.startsWith "$" w then

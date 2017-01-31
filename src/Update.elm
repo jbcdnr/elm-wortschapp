@@ -28,7 +28,7 @@ createSelector name front back =
                 |> List.map
                     (\w ->
                         if String.startsWith "$" w then
-                            String.dropLeft 1 w |> String.toInt |> Result.toMaybe |> Maybe.andThen (\i -> List.getAt i args) |> Maybe.withDefault w
+                            String.dropLeft 1 w |> String.toInt |> Result.toMaybe |> Maybe.andThen (\i -> List.getAt (i - 1) args) |> Maybe.withDefault w
                         else
                             w
                     )
@@ -67,7 +67,7 @@ createDeck rawFile =
                 |> List.map (\( name, front, back ) -> createSelector name front back)
 
         entries =
-            List.filter (\r -> not <| String.startsWith ":" r) rows
+            List.filter (\r -> not (String.startsWith ":" r)) rows
 
         createEntry : Int -> String -> Maybe Entry
         createEntry length row =
@@ -78,7 +78,7 @@ createDeck rawFile =
                 if List.length values < length then
                     Nothing
                 else
-                    Just (Entry (List.take length values) (List.drop length values))
+                    Just (Entry (List.take length values) (List.drop length values |> List.filter ((/=) "")))
 
         allEntries =
             entries |> List.map (createEntry length) |> List.flatten
@@ -95,7 +95,7 @@ update msg ({ allEntries, previousCards, nextCards, showSolution, selectedSelect
                     createDeck newDeck
 
                 newModel =
-                    { model | allEntries = allEntries, selectors = selectors }
+                    { model | allEntries = allEntries, selectors = selectors, selectedSelector = List.head selectors }
             in
                 ( newModel, shuffleDeckCmd newModel )
 

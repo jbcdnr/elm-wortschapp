@@ -17,28 +17,6 @@ uncons3 ls =
             Nothing
 
 
-createSelector : String -> String -> String -> Selector
-createSelector name front back =
-    let
-        -- TODO not correct to split on spaces
-        format : String -> List String -> String
-        format str args =
-            str
-                |> String.split " "
-                |> List.map
-                    (\w ->
-                        if String.startsWith "$" w then
-                            String.dropLeft 1 w |> String.toInt |> Result.toMaybe |> Maybe.andThen (\i -> List.getAt (i - 1) args) |> Maybe.withDefault w
-                        else
-                            w
-                    )
-                |> String.join " "
-
-        apply : List String -> Card
-        apply ls =
-            Card (format front ls) (format back ls)
-    in
-        Selector name apply
 
 
 createDeck : String -> ( List Entry, List Selector )
@@ -64,7 +42,7 @@ createDeck rawFile =
                 |> List.map (List.drop 1)
                 |> List.map uncons3
                 |> List.flatten
-                |> List.map (\( name, front, back ) -> createSelector name front back)
+                |> List.map (\( name, front, back ) -> Selector name front back)
 
         entries =
             List.filter (\r -> not (String.startsWith ":" r)) rows

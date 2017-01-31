@@ -82,7 +82,7 @@ tags model =
         |> List.flatMap .tags
         |> List.filter ((/=) "")
         |> List.unique
-        |> List.sort
+        |> List.sortBy (String.toUpper)
 
 
 type alias Selector =

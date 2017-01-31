@@ -29,8 +29,10 @@ deckShuffler ({ allEntries, selectedSelector, selectedTags } as model) =
         convert : List Entry -> List Card
         convert entries =
             case selectedSelector of
-                        Just selector ->
-                            entries |> List.map .data |> List.map selector.apply
-                        Nothing -> []
+                Just selector ->
+                    entries |> List.map .data |> List.map selector.apply
+
+                Nothing ->
+                    []
     in
         Random.map convert deckGenerator

@@ -26,7 +26,6 @@ getIndex url =
         Http.send NewIndex request
 
 
-
 csvToSources : String -> List Source
 csvToSources text =
     String.split "\n" text

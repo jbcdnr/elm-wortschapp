@@ -10,15 +10,9 @@ import Html.Events.Extra exposing (targetValueIntParse)
 
 view model =
     div [ class "container" ]
-        (List.append
-            (if List.length model.sources <= 1 then
-                []
-             else
-                [ h5 [] [ text "Source" ]
-                , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
-                ]
-            )
-            [ h5 [] [ text "Categories" ]
+            [ h5 [] [ text "Source" ]
+            , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
+            , h5 [] [ text "Categories" ]
             , (tagsView model)
             , h5 [] [ text "Order" ]
             , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]

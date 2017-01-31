@@ -25,10 +25,10 @@ createSelector name front back =
         format str args =
             str
                 |> String.split " "
-                |> String.map
+                |> List.map
                     (\w ->
                         if String.startsWith "$" w then
-                            String.dropLeft 1 w |> String.toInt |> Result.asMaybe |> Maybe.andThen (\i -> args.getAt i args) |> Maybe.withDefault w
+                            String.dropLeft 1 w |> String.toInt |> Result.toMaybe |> Maybe.andThen (\i -> List.getAt i args) |> Maybe.withDefault w
                         else
                             w
                     )
@@ -41,7 +41,7 @@ createSelector name front back =
         Selector name apply
 
 
-createDeck : String -> ( Deck, List Selector )
+createDeck : String -> ( List Entry, List Selector )
 createDeck rawFile =
     let
         rows =
@@ -53,7 +53,7 @@ createDeck rawFile =
         length =
             commands
                 |> List.find (String.startsWith ":length")
-                |> Maybe.andThen (\r -> List.split "," r |> List.map String.trim |> List.getAt 1)
+                |> Maybe.andThen (\r -> String.split "," r |> List.map String.trim |> List.getAt 1)
                 |> Maybe.andThen (\l -> String.toInt l |> Result.toMaybe)
                 |> Maybe.withDefault 2
 
@@ -66,11 +66,11 @@ createDeck rawFile =
                 |> List.flatten
                 |> List.map (\( name, front, back ) -> createSelector name front back)
 
-        cards =
+        entries =
             List.filter (\r -> not <| String.startsWith ":" r) rows
 
-        createCard : Int -> String -> Maybe Card
-        createCard length row =
+        createEntry : Int -> String -> Maybe Entry
+        createEntry length row =
             let
                 values =
                     String.split "," row |> List.map String.trim
@@ -78,24 +78,24 @@ createDeck rawFile =
                 if List.length values < length then
                     Nothing
                 else
-                    Just (Card (List.take length values) (List.drop length values))
+                    Just (Entry (List.take length values) (List.drop length values))
 
-        deck =
-            cards |> List.map (createCard length) |> List.flatten
+        allEntries =
+            entries |> List.map (createEntry length) |> List.flatten
     in
-        ( deck, selectors )
+        ( allEntries, selectors )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, selectedTags } as model) =
+update msg ({ allEntries, previousCards, nextCards, showSolution, selectedSelector, selectedTags } as model) =
     case msg of
         NewDeck (Ok newDeck) ->
             let
-                ( deck, selectors ) =
+                ( allEntries, selectors ) =
                     createDeck newDeck
 
                 newModel =
-                    { model | allCards = deck, selectors = selectors }
+                    { model | allEntries = allEntries, selectors = selectors }
             in
                 ( newModel, shuffleDeckCmd newModel )
 

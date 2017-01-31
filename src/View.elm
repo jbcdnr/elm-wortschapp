@@ -15,7 +15,7 @@ view model =
         , h5 [] [ text "Categories" ]
         , (tagsView model)
         , h5 [] [ text "Order" ]
-        , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
+        , selectorsView model
         , cardView model
         , div [ class "row" ]
             [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]

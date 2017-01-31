@@ -52,7 +52,8 @@ type alias Model =
     , previousCards : Deck
     , nextCards : Deck
     , showSolution : Bool
-    , waySelector : Selector
+    , selectedSelector : Maybe Selector
+    , selectors : List Selector
     , selectedTags : SelectedTags
     }
 
@@ -69,8 +70,8 @@ defaultModel =
     , previousCards = []
     , nextCards = []
     , showSolution = False
-    , selectedSelector = Maybe Selector
-    , selectors = List Selector
+    , selectedSelector = Nothing
+    , selectors = []
     , selectedTags = AllTags
     }
 

@@ -12,55 +12,25 @@ shuffleDeckCmd model =
 
 
 deckShuffler : Model -> Random.Generator Deck
-deckShuffler ({ allCards, waySelector, selectedTags } as model) =
+deckShuffler ({ allEntries, selectedSelector, selectedTags } as model) =
     let
         deck =
             case selectedTags of
                 AllTags ->
-                    allCards
+                    allEntries
 
                 Tags tags ->
-                    allCards |> List.filter (\c -> c.tags |> List.any (\tag -> tags |> List.member tag))
+                    allEntries |> List.filter (\c -> c.tags |> List.any (\tag -> tags |> List.member tag))
 
+        deckGenerator : Random.Generator (List Entry)
         deckGenerator =
             List.shuffle deck
 
-        flipGenerator =
-            Random.list (List.length deck) Random.bool
-
-        together =
-            Random.pair deckGenerator flipGenerator
-
-        zipped : Random.Generator (List ( Card, Bool ))
-        zipped =
-            together
-                |> Random.map
-                    (\( cards, flips ) ->
-                        (List.zip cards flips)
-                    )
+        convert : List Entry -> List Card
+        convert entries =
+            case selectedSelector of
+                        Just selector ->
+                            entries |> List.map .data |> List.map selector.apply
+                        Nothing -> []
     in
-        zipped
-            |> Random.map
-                (\ls ->
-                    ls
-                        |> List.map
-                            (\( c, f ) ->
-                                case waySelector of
-                                    Both ->
-                                        if f then
-                                            flip c
-                                        else
-                                            c
-
-                                    DeutschToFrancais ->
-                                        c
-
-                                    FrancaisToDeutsch ->
-                                        flip c
-                            )
-                )
-
-
-flip : Card -> Card
-flip card =
-    Card card.back card.front card.tags
+        Random.map convert deckGenerator

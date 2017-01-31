@@ -33,16 +33,21 @@ type alias Deck =
     List Card
 
 
+type alias Entry =
+    { data : List String
+    , tags : List Tag
+    }
+
+
 type alias Card =
     { front : String
     , back : String
-    , tags : List Tag
     }
 
 
 type alias Model =
     { sources : List Source
-    , allCards : Deck
+    , allEntries : List Entry
     , currentCard : Maybe Card
     , previousCards : Deck
     , nextCards : Deck
@@ -59,25 +64,27 @@ type SelectedTags
 
 defaultModel =
     { sources = []
-    , allCards = []
+    , allEntries = []
     , currentCard = Nothing
     , previousCards = []
     , nextCards = []
     , showSolution = False
-    , waySelector = Both
+    , selectedSelector = Maybe Selector
+    , selectors = List Selector
     , selectedTags = AllTags
     }
 
 
 tags : Model -> List Tag
 tags model =
-    model.allCards
+    model.allEntries
         |> List.flatMap .tags
+        |> List.filter ((/=) "")
         |> List.unique
         |> List.sort
 
 
-type Selector
-    = Both
-    | DeutschToFrancais
-    | FrancaisToDeutsch
+type alias Selector =
+    { name : String
+    , apply : List String -> Card
+    }

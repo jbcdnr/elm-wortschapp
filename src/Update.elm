@@ -7,16 +7,95 @@ import DeckShuffle exposing (..)
 import Cmd exposing (..)
 
 
+uncons3 : List a -> Maybe ( a, a, a )
+uncons3 ls =
+    case ( List.getAt 0 ls, List.getAt 1 ls, List.getAt 2 ls ) of
+        ( Just a, Just b, Just c ) ->
+            Just ( a, b, c )
+
+        others ->
+            Nothing
+
+
+createSelector : String -> String -> String -> Selector
+createSelector name front back =
+    let
+        -- TODO not correct to split on spaces
+        format : String -> List String -> String
+        format str args =
+            str
+                |> String.split " "
+                |> String.map
+                    (\w ->
+                        if String.startsWith "$" w then
+                            String.dropLeft 1 w |> String.toInt |> Result.asMaybe |> Maybe.andThen (\i -> args.getAt i args) |> Maybe.withDefault w
+                        else
+                            w
+                    )
+                |> String.join " "
+
+        apply : List String -> Card
+        apply ls =
+            Card (format front ls) (format back ls)
+    in
+        Selector name apply
+
+
+createDeck : String -> ( Deck, List Selector )
+createDeck rawFile =
+    let
+        rows =
+            String.split "\n" rawFile
+
+        commands =
+            List.filter (String.startsWith ":") rows
+
+        length =
+            commands
+                |> List.find (String.startsWith ":length")
+                |> Maybe.andThen (\r -> List.split "," r |> List.map String.trim |> List.getAt 1)
+                |> Maybe.andThen (\l -> String.toInt l |> Result.toMaybe)
+                |> Maybe.withDefault 2
+
+        selectors =
+            commands
+                |> List.filter (String.startsWith ":selector")
+                |> List.map (\r -> String.split "," r |> List.map String.trim)
+                |> List.map (List.drop 1)
+                |> List.map uncons3
+                |> List.flatten
+                |> List.map (\( name, front, back ) -> createSelector name front back)
+
+        cards =
+            List.filter (\r -> not <| String.startsWith ":" r) rows
+
+        createCard : Int -> String -> Maybe Card
+        createCard length row =
+            let
+                values =
+                    String.split "," row |> List.map String.trim
+            in
+                if List.length values < length then
+                    Nothing
+                else
+                    Just (Card (List.take length values) (List.drop length values))
+
+        deck =
+            cards |> List.map (createCard length) |> List.flatten
+    in
+        ( deck, selectors )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, selectedTags } as model) =
     case msg of
         NewDeck (Ok newDeck) ->
             let
-                deck =
-                    csvToDeck newDeck
+                ( deck, selectors ) =
+                    createDeck newDeck
 
                 newModel =
-                    { model | allCards = deck }
+                    { model | allCards = deck, selectors = selectors }
             in
                 ( newModel, shuffleDeckCmd newModel )
 
@@ -109,13 +188,13 @@ update msg ({ allCards, previousCards, nextCards, showSolution, waySelector, sel
                 )
 
         ChangeSelector selector ->
-            if selector == waySelector then
+            if Just selector == model.selectedSelector then
                 ( model, Cmd.none )
             else
                 let
                     newModel =
                         { model
-                            | waySelector = selector
+                            | selectedSelector = Just selector
                             , previousCards = []
                             , currentCard = Nothing
                         }

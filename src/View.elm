@@ -10,27 +10,26 @@ import Html.Events.Extra exposing (targetValueIntParse)
 
 view model =
     div [ class "container" ]
-            [ h5 [] [ text "Source" ]
-            , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
-            , h5 [] [ text "Categories" ]
-            , (tagsView model)
-            , h5 [] [ text "Order" ]
-            , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
-            , cardView model
-            , div [ class "row" ]
-                [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]
-                , button [ onClick ToggleSolution, class "button four columns" ]
-                    [ text
-                        (if model.showSolution then
-                            "Hide"
-                         else
-                            "Show"
-                        )
-                    ]
-                , button [ onClick OnNext, class "button button-primary four columns" ] [ text "Next" ]
+        [ h5 [] [ text "Source" ]
+        , select [ onChange ChangeSource ] (model.sources |> List.map (\s -> option [] [ text s.name ]))
+        , h5 [] [ text "Categories" ]
+        , (tagsView model)
+        , h5 [] [ text "Order" ]
+        , selectorsView model [ Both, DeutschToFrancais, FrancaisToDeutsch ]
+        , cardView model
+        , div [ class "row" ]
+            [ button [ onClick OnPrevious, class "button four columns" ] [ text "Previous" ]
+            , button [ onClick ToggleSolution, class "button four columns" ]
+                [ text
+                    (if model.showSolution then
+                        "Hide"
+                     else
+                        "Show"
+                    )
                 ]
+            , button [ onClick OnNext, class "button button-primary four columns" ] [ text "Next" ]
             ]
-        )
+        ]
 
 
 onChange tagger =
@@ -86,11 +85,11 @@ tagsView model =
         div [ class "row" ] (allButton :: (tags model |> List.map (\tag -> tagView tag (isSelected tag) (ToggleTag tag) "#2ecc71")))
 
 
-selectorsView model selectors =
+selectorsView model =
     div [ class "row" ]
-        (selectors
+        (model.selectors
             |> List.map
-                (\s -> tagView (selectorString s) (s == model.waySelector) (ChangeSelector s) "#bdc3c7")
+                (\s -> tagView s.name (Just s == model.selectedSelector) (ChangeSelector s) "#bdc3c7")
         )
 
 
@@ -108,16 +107,3 @@ tagView label selected onClickCmd selectedColor =
             , style tagStyle
             ]
             [ text label ]
-
-
-selectorString : Selector -> String
-selectorString sel =
-    case sel of
-        Both ->
-            "Both"
-
-        DeutschToFrancais ->
-            "DE → FR"
-
-        FrancaisToDeutsch ->
-            "FR → DE"

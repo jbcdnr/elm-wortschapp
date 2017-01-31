@@ -45,16 +45,24 @@ applySelector selector data =
         interpolation : String -> List String
         interpolation str =
             case List.elemIndex '$' (String.toList str) of
-                    Nothing ->
-                        [ str ]
-                    Just index ->
-                        let
-                            before = String.left index str
-                            dollarCount = String.dropLeft (index + 1) str
-                            value = List.takeWhile Char.isDigit (String.toList dollarCount)
-                            rest = List.dropWhile Char.isDigit (String.toList dollarCount)
-                        in
-                            before :: String.fromList ('$' :: value) :: interpolation (String.fromList rest)
+                Nothing ->
+                    [ str ]
+
+                Just index ->
+                    let
+                        before =
+                            String.left index str
+
+                        dollarCount =
+                            String.dropLeft (index + 1) str
+
+                        value =
+                            List.takeWhile Char.isDigit (String.toList dollarCount)
+
+                        rest =
+                            List.dropWhile Char.isDigit (String.toList dollarCount)
+                    in
+                        before :: String.fromList ('$' :: value) :: interpolation (String.fromList rest)
 
         format : String -> List String -> String
         format str args =

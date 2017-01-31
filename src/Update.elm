@@ -7,70 +7,13 @@ import DeckShuffle exposing (..)
 import Cmd exposing (..)
 
 
-uncons3 : List a -> Maybe ( a, a, a )
-uncons3 ls =
-    case ( List.getAt 0 ls, List.getAt 1 ls, List.getAt 2 ls ) of
-        ( Just a, Just b, Just c ) ->
-            Just ( a, b, c )
-
-        others ->
-            Nothing
-
-
-
-
-createDeck : String -> ( List Entry, List Selector )
-createDeck rawFile =
-    let
-        rows =
-            String.split "\n" rawFile
-
-        commands =
-            List.filter (String.startsWith ":") rows
-
-        length =
-            commands
-                |> List.find (String.startsWith ":length")
-                |> Maybe.andThen (\r -> String.split "," r |> List.map String.trim |> List.getAt 1)
-                |> Maybe.andThen (\l -> String.toInt l |> Result.toMaybe)
-                |> Maybe.withDefault 2
-
-        selectors =
-            commands
-                |> List.filter (String.startsWith ":selector")
-                |> List.map (\r -> String.split "," r |> List.map String.trim)
-                |> List.map (List.drop 1)
-                |> List.map uncons3
-                |> List.flatten
-                |> List.map (\( name, front, back ) -> Selector name front back)
-
-        entries =
-            List.filter (\r -> not (String.startsWith ":" r)) rows
-
-        createEntry : Int -> String -> Maybe Entry
-        createEntry length row =
-            let
-                values =
-                    String.split "," row |> List.map String.trim
-            in
-                if List.length values < length then
-                    Nothing
-                else
-                    Just (Entry (List.take length values) (List.drop length values |> List.filter ((/=) "")))
-
-        allEntries =
-            entries |> List.map (createEntry length) |> List.flatten
-    in
-        ( allEntries, selectors )
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ allEntries, previousCards, nextCards, showSolution, selectedSelector, selectedTags } as model) =
     case msg of
         NewDeck (Ok newDeck) ->
             let
                 ( allEntries, selectors ) =
-                    createDeck newDeck
+                    digestDeckFile newDeck
 
                 newModel =
                     { model | allEntries = allEntries, selectors = selectors, selectedSelector = List.head selectors }
@@ -94,7 +37,7 @@ update msg ({ allEntries, previousCards, nextCards, showSolution, selectedSelect
                             Cmd.none
 
                         Just ( head, tail ) ->
-                            getDeck head.url
+                            getUrl head.url NewDeck
             in
                 ( newModel, cmd )
 
@@ -226,7 +169,7 @@ update msg ({ allEntries, previousCards, nextCards, showSolution, selectedSelect
                     ( model, Cmd.none )
 
                 Just { url } ->
-                    ( { model | currentCard = Nothing, previousCards = [], nextCards = [] }, getDeck url )
+                    ( { model | currentCard = Nothing, previousCards = [], nextCards = [] }, getUrl url NewDeck )
 
         NoOp ->
             ( model, Cmd.none )
@@ -240,3 +183,48 @@ withCurrentCard model update =
 
         Just c ->
             update c
+
+
+digestDeckFile : String -> ( List Entry, List Selector )
+digestDeckFile rawFile =
+    let
+        rows =
+            String.split "\n" rawFile
+
+        commands =
+            List.filter (String.startsWith ":") rows
+
+        length =
+            commands
+                |> List.find (String.startsWith ":length")
+                |> Maybe.andThen (\r -> String.split "," r |> List.map String.trim |> List.getAt 1)
+                |> Maybe.andThen (\l -> String.toInt l |> Result.toMaybe)
+                |> Maybe.withDefault 2
+
+        selectors =
+            commands
+                |> List.filter (String.startsWith ":selector")
+                |> List.map (\r -> String.split "," r |> List.map String.trim)
+                |> List.map (List.drop 1)
+                |> List.map List.uncons3
+                |> List.flatten
+                |> List.map (\( name, front, back, _ ) -> Selector name front back)
+
+        entries =
+            List.filter (\r -> not (String.startsWith ":" r)) rows
+
+        createEntry : Int -> String -> Maybe Entry
+        createEntry length row =
+            let
+                values =
+                    String.split "," row |> List.map String.trim
+            in
+                if List.length values < length then
+                    Nothing
+                else
+                    Just (Entry (List.take length values) (List.drop length values |> List.filter ((/=) "")))
+
+        allEntries =
+            entries |> List.map (createEntry length) |> List.flatten
+    in
+        ( allEntries, selectors )

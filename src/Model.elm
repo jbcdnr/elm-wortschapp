@@ -85,7 +85,10 @@ tags model =
         |> List.sortBy (String.toUpper)
 
 
+
 -- TODO should not have funciton in Model
+
+
 type alias Selector =
     { name : String
     , front : String
